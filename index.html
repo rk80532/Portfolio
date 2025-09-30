@@ -79,7 +79,13 @@
 
         .btn:hover {
             background-color: #0056b3;
-            transform: translateY(-2px);
+            transform: translateY(-2px) scale(1.05);
+            transition: background-color 0.3s, transform 0.3s;
+        }
+
+        button:hover {
+            transform: scale(1.05);
+            transition: transform 0.2s;
         }
 
         /* --- Header & Navigation --- */
@@ -166,12 +172,17 @@
             margin-bottom: 2rem;
         }
 
+        .hero-image {
+            perspective: 1000px;
+        }
+
         .hero-image img {
             width: 200px;
             height: 200px;
             border-radius: 50%;
             object-fit: cover;
             border: 5px solid var(--primary-color);
+            transition: transform 0.1s ease-out;
         }
 
         /* --- About Section --- */
@@ -366,6 +377,95 @@
             color: var(--primary-color);
         }
 
+        /* --- Animations --- */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideInLeft {
+            from {
+                opacity: 0;
+                transform: translateX(-50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        @keyframes slideInRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .animate-on-scroll {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+        }
+
+        .animate-on-scroll.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .hero-content.animate {
+            animation: fadeIn 1s ease-out;
+        }
+
+        .hero-image.animate {
+            animation: slideInRight 1s ease-out 0.3s both;
+        }
+
+        .timeline-content.animate {
+            animation: slideInLeft 0.8s ease-out both;
+        }
+
+        .timeline-item.left .timeline-content.animate {
+            animation: slideInRight 0.8s ease-out both;
+        }
+
+        .project-card.animate {
+            animation: fadeIn 0.8s ease-out both;
+        }
+
+        .contact-form.animate {
+            animation: slideInLeft 1s ease-out both;
+        }
+
+        .nav-link {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background-color: var(--primary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
         /* --- Responsive Design --- */
         @media (max-width: 768px) {
             h2 { font-size: 2rem; }
@@ -400,12 +500,12 @@
         <!-- Hero Section -->
         <section id="home">
             <div class="hero container">
-                <div class="hero-content">
+                <div class="hero-content animate">
                     <h1>Rahul Kumar</h1>
                     <p class="tagline">Engineering Student | Aspiring Web Developer | Problem Solver</p>
                     <a href="myresume.pdf" class="btn" download>Download Resume</a>
                 </div>
-                <div class="hero-image">
+                <div class="hero-image animate">
                     <img src="rahul.jpeg" alt="Rahul Kumar">
                 </div>
             </div>
@@ -616,6 +716,108 @@
             if (skillsSection) {
                 skillsObserver.observe(skillsSection);
             }
+
+            // --- Animate Sections on Scroll ---
+            const sectionsToAnimate = document.querySelectorAll('#about, #education, #projects, #contact');
+            const animateOnScroll = (entries, observer) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        if (entry.target.id === 'about') {
+                            entry.target.querySelectorAll('.about-bio, .about-skills').forEach(el => {
+                                el.classList.add('animate-on-scroll', 'animate');
+                            });
+                        } else if (entry.target.id === 'education') {
+                            entry.target.querySelectorAll('.timeline-content').forEach(el => {
+                                el.classList.add('animate');
+                            });
+                        } else if (entry.target.id === 'projects') {
+                            entry.target.querySelectorAll('.project-card').forEach(el => {
+                                el.classList.add('animate');
+                            });
+                        } else if (entry.target.id === 'contact') {
+                            const form = entry.target.querySelector('.contact-form');
+                            if (form) form.classList.add('animate');
+                        }
+                        observer.unobserve(entry.target);
+                    }
+                });
+            };
+
+            const sectionObserver = new IntersectionObserver(animateOnScroll, {
+                root: null,
+                threshold: 0.3
+            });
+
+            sectionsToAnimate.forEach(section => {
+                sectionObserver.observe(section);
+            });
+
+            // --- Trigger Animation on Navbar Click ---
+            const navLinks = document.querySelectorAll('.nav-link');
+
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    const targetId = link.getAttribute('href');
+                    const targetSection = document.querySelector(targetId);
+                    if (targetSection) {
+                        triggerAnimation(targetSection);
+                    }
+                });
+            });
+
+            function triggerAnimation(section) {
+                if (section.id === 'about') {
+                    section.querySelectorAll('.about-bio, .about-skills').forEach(el => {
+                        el.classList.remove('animate-on-scroll', 'animate');
+                        setTimeout(() => {
+                            el.classList.add('animate-on-scroll', 'animate');
+                        }, 10);
+                    });
+                } else if (section.id === 'education') {
+                    section.querySelectorAll('.timeline-content').forEach(el => {
+                        el.classList.remove('animate');
+                        setTimeout(() => {
+                            el.classList.add('animate');
+                        }, 10);
+                    });
+                } else if (section.id === 'projects') {
+                    section.querySelectorAll('.project-card').forEach(el => {
+                        el.classList.remove('animate');
+                        setTimeout(() => {
+                            el.classList.add('animate');
+                        }, 10);
+                    });
+                } else if (section.id === 'contact') {
+                    const form = section.querySelector('.contact-form');
+                    if (form) {
+                        form.classList.remove('animate');
+                        setTimeout(() => {
+                            form.classList.add('animate');
+                        }, 10);
+                    }
+                }
+                // For home, already animated
+            }
+
+            // --- Interactive Photo Tilt ---
+            const heroImage = document.querySelector('.hero-image img');
+
+            heroImage.addEventListener('mousemove', (e) => {
+                const rect = heroImage.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+                const mouseX = e.clientX;
+                const mouseY = e.clientY;
+
+                const rotateY = ((mouseX - centerX) / (rect.width / 2)) * 15; // Horizontal tilt
+                const rotateX = -((mouseY - centerY) / (rect.height / 2)) * 15; // Vertical tilt
+
+                heroImage.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            heroImage.addEventListener('mouseleave', () => {
+                heroImage.style.transform = 'rotateX(0deg) rotateY(0deg)';
+            });
 
             // --- Contact Form Validation ---
             const contactForm = document.getElementById('contactForm');
